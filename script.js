@@ -1,62 +1,115 @@
-// DARK MODE TOGGLE
-const themeToggle = document.getElementById("themeToggle");
-const body = document.body;
+/* =====================
+   MOBILE NAV TOGGLE
+===================== */
+const navToggle = document.querySelector(".nav-toggle");
+const navLinks = document.querySelector(".nav-links");
 
-// Start with light mode, but remember previous choice if you want later
-themeToggle.addEventListener("click", () => {
-  body.classList.toggle("dark");
-  const isDark = body.classList.contains("dark");
-  themeToggle.textContent = isDark ? "☀️" : "🌙";
-});
-
-// PLANT SEARCH + HIDDEN MONEY PLANT
-const searchInput = document.getElementById("plantSearch");
-const searchBtn = document.getElementById("searchBtn");
-const cards = document.querySelectorAll(".plant-card");
-const moneyPlantCard = document.getElementById("moneyPlantCard");
-const searchMessage = document.getElementById("searchMessage");
-
-function performSearch() {
-  const query = searchInput.value.trim().toLowerCase();
-  let anyVisible = false;
-
-  cards.forEach(card => {
-    const name = card.dataset.name.toLowerCase();
-
-    if (card.classList.contains("secret")) {
-      // Hide secret card by default
-      card.classList.add("hidden");
-      card.classList.remove("found");
-
-      if (query.includes("money plant") || query === "moneyplant") {
-        card.classList.remove("hidden");
-        card.classList.add("found");
-        anyVisible = true;
-        searchMessage.textContent = "You discovered the hidden Money Plant!";
-      }
-      return;
-    }
-
-    if (!query || name.includes(query)) {
-      card.classList.remove("hidden");
-      anyVisible = true;
-    } else {
-      card.classList.add("hidden");
-    }
+if (navToggle && navLinks) {
+  navToggle.addEventListener("click", () => {
+    navLinks.classList.toggle("nav-open");
   });
 
-  if (!query) {
-    searchMessage.textContent = "";
-  } else if (!anyVisible && !query.includes("money plant")) {
-    searchMessage.textContent = "No plants matched your search. Try another name.";
-  } else if (anyVisible && !query.includes("money plant")) {
-    searchMessage.textContent = "";
-  }
+  navLinks.addEventListener("click", (e) => {
+    if (e.target.tagName.toLowerCase() === "a") {
+      navLinks.classList.remove("nav-open");
+    }
+  });
+}
+/* =====================
+   FIXED SEARCH ENGINE
+   (Supports Hidden Plants)
+===================== */
+const searchInput = document.getElementById("plant-search");
+const plantCards = document.querySelectorAll(".plant-card");
+const searchNote = document.getElementById("search-note");
+
+if (searchInput) {
+  searchInput.addEventListener("input", () => {
+    const query = searchInput.value.toLowerCase().trim();
+    let matchFound = false;
+
+    plantCards.forEach(card => {
+      const name = (card.dataset.name || "").toLowerCase();
+      const tags = (card.dataset.tags || "").toLowerCase();
+
+      const matches =
+        query.length === 0 ||
+        name.includes(query) ||
+        tags.includes(query);
+
+      if (matches) {
+        card.style.display = "block"; // 🔥 forces hidden plants to show
+        matchFound = true;
+      } else {
+        card.style.display = "none";
+      }
+    });
+
+    // Show or hide "no results" message
+    if (searchNote) {
+      searchNote.hidden = matchFound || query.length === 0;
+    }
+  });
+}
+/* =====================
+   FOOTER YEAR
+===================== */
+const yearSpan = document.getElementById("year");
+if (yearSpan) {
+  yearSpan.textContent = new Date().getFullYear();
 }
 
-searchBtn.addEventListener("click", performSearch);
-searchInput.addEventListener("keyup", event => {
-  if (event.key === "Enter") {
-    performSearch();
-  }
+/* ========================================
+   SCROLL REVEAL ANIMATION
+======================================== */
+const revealElements = document.querySelectorAll(".reveal");
+
+function revealOnScroll() {
+  revealElements.forEach((el) => {
+    const windowHeight = window.innerHeight;
+    const elementTop = el.getBoundingClientRect().top;
+
+    if (elementTop < windowHeight - 100) {
+      el.classList.add("active");
+    } else {
+      el.classList.remove("active");
+    }
+  });
+}
+
+window.addEventListener("scroll", revealOnScroll);
+window.addEventListener("load", revealOnScroll);
+
+/* ========================================
+   LOADING SCREEN SCRIPT
+======================================== */
+window.addEventListener("load", () => {
+  const loader = document.getElementById("loading-screen");
+  if (!loader) return;
+  setTimeout(() => {
+    loader.classList.add("hide");
+  }, 400);
 });
+
+/* 🌙 PREMIUM DARK MODE TOGGLE */
+const themeToggle = document.getElementById("theme-toggle");
+
+if (themeToggle) {
+  // Apply saved theme on load
+  if (localStorage.getItem("theme") === "dark") {
+    document.body.classList.add("dark-mode");
+    themeToggle.textContent = "☀️";
+  }
+
+  themeToggle.addEventListener("click", () => {
+    document.body.classList.toggle("dark-mode");
+
+    if (document.body.classList.contains("dark-mode")) {
+      themeToggle.textContent = "☀️";
+      localStorage.setItem("theme", "dark");
+    } else {
+      themeToggle.textContent = "🌙";
+      localStorage.setItem("theme", "light");
+    }
+  });
+}
