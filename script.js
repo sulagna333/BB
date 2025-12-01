@@ -1,37 +1,62 @@
-// Basic plant search filter
-document.addEventListener("DOMContentLoaded", () => {
-  const searchInput = document.getElementById("plantSearch");
-  const cards = document.querySelectorAll(".plant-card");
-  const noResults = document.getElementById("noResults");
+// DARK MODE TOGGLE
+const themeToggle = document.getElementById("themeToggle");
+const body = document.body;
 
-  if (!searchInput || !cards.length) return;
+// Start with light mode, but remember previous choice if you want later
+themeToggle.addEventListener("click", () => {
+  body.classList.toggle("dark");
+  const isDark = body.classList.contains("dark");
+  themeToggle.textContent = isDark ? "☀️" : "🌙";
+});
 
-  const filterPlants = () => {
-    const term = searchInput.value.trim().toLowerCase();
-    let anyVisible = false;
+// PLANT SEARCH + HIDDEN MONEY PLANT
+const searchInput = document.getElementById("plantSearch");
+const searchBtn = document.getElementById("searchBtn");
+const cards = document.querySelectorAll(".plant-card");
+const moneyPlantCard = document.getElementById("moneyPlantCard");
+const searchMessage = document.getElementById("searchMessage");
 
-    cards.forEach((card) => {
-      const name = card.getAttribute("data-name")?.toLowerCase() || "";
-      const tags = card.getAttribute("data-tags")?.toLowerCase() || "";
+function performSearch() {
+  const query = searchInput.value.trim().toLowerCase();
+  let anyVisible = false;
 
-      const match = !term || name.includes(term) || tags.includes(term);
-      card.style.display = match ? "" : "none";
-      if (match) anyVisible = true;
-    });
+  cards.forEach(card => {
+    const name = card.dataset.name.toLowerCase();
 
-    if (noResults) {
-      noResults.classList.toggle("hidden", anyVisible);
+    if (card.classList.contains("secret")) {
+      // Hide secret card by default
+      card.classList.add("hidden");
+      card.classList.remove("found");
+
+      if (query.includes("money plant") || query === "moneyplant") {
+        card.classList.remove("hidden");
+        card.classList.add("found");
+        anyVisible = true;
+        searchMessage.textContent = "You discovered the hidden Money Plant!";
+      }
+      return;
     }
-  };
 
-  searchInput.addEventListener("input", filterPlants);
-
-  // small UX: click chips to fill search
-  document.querySelectorAll(".chip").forEach((chip) => {
-    chip.addEventListener("click", () => {
-      searchInput.value = chip.textContent.trim();
-      searchInput.focus();
-      filterPlants();
-    });
+    if (!query || name.includes(query)) {
+      card.classList.remove("hidden");
+      anyVisible = true;
+    } else {
+      card.classList.add("hidden");
+    }
   });
+
+  if (!query) {
+    searchMessage.textContent = "";
+  } else if (!anyVisible && !query.includes("money plant")) {
+    searchMessage.textContent = "No plants matched your search. Try another name.";
+  } else if (anyVisible && !query.includes("money plant")) {
+    searchMessage.textContent = "";
+  }
+}
+
+searchBtn.addEventListener("click", performSearch);
+searchInput.addEventListener("keyup", event => {
+  if (event.key === "Enter") {
+    performSearch();
+  }
 });
